@@ -55,7 +55,7 @@ CImgPrcsTestDlg::CImgPrcsTestDlg(CWnd* pParent /*=NULL*/)
 	m_pMainImgBuf = NULL;
 }
 CImgPrcsTestDlg::~CImgPrcsTestDlg() {
-	cvReleaseImage(&m_pMainImgBuf);
+	//cvReleaseImage(&m_pMainImgBuf);
 }
 
 void CImgPrcsTestDlg::DoDataExchange(CDataExchange* pDX)
@@ -211,8 +211,9 @@ void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY, _T("img|*.jpg|"));
 
 	if(IDOK == dlg.DoModal()) {
-		cvReleaseImage(&m_pMainImgBuf);
 		m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
 		DisplayImage(m_pMainImgBuf);
+		cvReleaseImage(&m_pMainImgBuf);
+		m_pMainImgBuf = NULL;
 	}
 }

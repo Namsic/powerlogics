@@ -11,42 +11,6 @@
 #endif
 
 
-// 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
-
-class CAboutDlg : public CDialog
-{
-public:
-	CAboutDlg();
-
-// 대화 상자 데이터입니다.
-	enum { IDD = IDD_ABOUTBOX };
-
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 지원입니다.
-
-// 구현입니다.
-protected:
-	DECLARE_MESSAGE_MAP()
-};
-
-CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
-{
-}
-
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
-END_MESSAGE_MAP()
-
-
-// CPracticeOpenCVDlg 대화 상자
-
-
-
-
 CPracticeOpenCVDlg::CPracticeOpenCVDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CPracticeOpenCVDlg::IDD, pParent)
 {
@@ -56,6 +20,7 @@ CPracticeOpenCVDlg::CPracticeOpenCVDlg(CWnd* pParent /*=NULL*/)
 void CPracticeOpenCVDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_Static_Display, m_StaticDisplay);
 }
 
 BEGIN_MESSAGE_MAP(CPracticeOpenCVDlg, CDialog)
@@ -72,26 +37,6 @@ BOOL CPracticeOpenCVDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// 시스템 메뉴에 "정보..." 메뉴 항목을 추가합니다.
-
-	// IDM_ABOUTBOX는 시스템 명령 범위에 있어야 합니다.
-	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
-	ASSERT(IDM_ABOUTBOX < 0xF000);
-
-	CMenu* pSysMenu = GetSystemMenu(FALSE);
-	if (pSysMenu != NULL)
-	{
-		BOOL bNameValid;
-		CString strAboutMenu;
-		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
-		ASSERT(bNameValid);
-		if (!strAboutMenu.IsEmpty())
-		{
-			pSysMenu->AppendMenu(MF_SEPARATOR);
-			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
-		}
-	}
-
 	// 이 대화 상자의 아이콘을 설정합니다. 응용 프로그램의 주 창이 대화 상자가 아닐 경우에는
 	//  프레임워크가 이 작업을 자동으로 수행합니다.
 	SetIcon(m_hIcon, TRUE);			// 큰 아이콘을 설정합니다.
@@ -104,15 +49,7 @@ BOOL CPracticeOpenCVDlg::OnInitDialog()
 
 void CPracticeOpenCVDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
-	{
-		CAboutDlg dlgAbout;
-		dlgAbout.DoModal();
-	}
-	else
-	{
-		CDialog::OnSysCommand(nID, lParam);
-	}
+	CDialog::OnSysCommand(nID, lParam);
 }
 
 // 대화 상자에 최소화 단추를 추가할 경우 아이콘을 그리려면
@@ -151,3 +88,11 @@ HCURSOR CPracticeOpenCVDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+void CPracticeOpenCVDlg::DrawImage(Mat image)
+{
+	CDC *pDC = m_StaticDisplay.GetDC();
+	CRect rect;
+	m_StaticDisplay.GetClientRect(&rect);
+
+
+}

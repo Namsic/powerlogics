@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "afxwin.h"
 
 
 // CPracticeOpenCVDlg 대화 상자
@@ -29,4 +30,11 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+
+private:
+	Mat m_matImage;
+	VideoCapture m_vCapture;
+
+	void DrawImage(Mat image);
+	CStatic m_StaticDisplay;
 };
