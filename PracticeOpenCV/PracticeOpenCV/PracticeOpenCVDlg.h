@@ -32,9 +32,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-	Mat m_matImage;
-	VideoCapture m_vCapture;
-
-	void DrawImage(Mat image);
+	void DrawImage(Mat mat_image);
+	void DisplayVideo(VideoCapture capture);
 	CStatic m_StaticDisplay;
+public:
+	afx_msg void OnBnClickedButtonOpenfile();
 };

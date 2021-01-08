@@ -28,6 +28,7 @@ BEGIN_MESSAGE_MAP(CPracticeOpenCVDlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	//}}AFX_MSG_MAP
+	ON_BN_CLICKED(IDC_Button_OpenFile, &CPracticeOpenCVDlg::OnBnClickedButtonOpenfile)
 END_MESSAGE_MAP()
 
 
@@ -88,11 +89,63 @@ HCURSOR CPracticeOpenCVDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-void CPracticeOpenCVDlg::DrawImage(Mat image)
+void CPracticeOpenCVDlg::DrawImage(Mat mat_image)
 {
 	CDC *pDC = m_StaticDisplay.GetDC();
 	CRect rect;
 	m_StaticDisplay.GetClientRect(&rect);
 
+	BITMAPINFO *bmpInfo = new BITMAPINFO;
+	//memset(&bmpInfo, 0, sizeof(bmpInfo));
+	bmpInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmpInfo->bmiHeader.biPlanes = 1;
+	bmpInfo->bmiHeader.biCompression = BI_RGB;
+	bmpInfo->bmiHeader.biWidth = mat_image.cols;
+	bmpInfo->bmiHeader.biHeight = -mat_image.rows;
+	bmpInfo->bmiHeader.biBitCount = mat_image.channels() * 8;
 
+	// if(image.channels == 1)
+
+	pDC->SetStretchBltMode(COLORONCOLOR);
+	::StretchDIBits(pDC->GetSafeHdc(), 
+		rect.left, rect.top, rect.right, rect.bottom, 
+		0, 0, mat_image.cols, mat_image.rows, 
+		mat_image.data, bmpInfo, DIB_RGB_COLORS, SRCCOPY);
+
+	delete bmpInfo;
+	m_StaticDisplay.ReleaseDC(pDC);
+}
+
+void CPracticeOpenCVDlg::DisplayVideo(VideoCapture capture)
+{
+	Mat m_mimage;
+	while(TRUE)
+	{
+		capture >> m_mimage;
+		if(m_mimage.empty()) break;
+		DrawImage(m_mimage);
+	}
+}
+
+void CPracticeOpenCVDlg::OnBnClickedButtonOpenfile()
+{
+	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY, _T("file|*.*|"));
+
+	if(IDOK == dlg.DoModal()) {
+		// Open Image File
+		CString ext = dlg.GetFileExt().MakeLower();
+		CString path = dlg.GetPathName();
+		CT2CA pstring(path);
+		std::string strPath(pstring);
+		if( ext == "jpg" ||
+			ext == "png" )
+		{
+			DrawImage(imread(strPath));
+		}
+		// Open Video File
+		else if(ext == "mp4")
+		{
+			DisplayVideo(VideoCapture(strPath));
+		}
+	}
 }

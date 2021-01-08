@@ -210,11 +210,13 @@ void CImgPrcsTestDlg::DisplayImage(IplImage* pImage)//, CDC *pDC, CRect& rect)
 }
 
 void CImgPrcsTestDlg::DisplayVideo(CvCapture* pVideo) {
-	while(TRUE) {
+	while(pVideo) {
 		cvGrabFrame(pVideo);
 		m_pMainImgBuf = cvRetrieveFrame(pVideo);
 		if( !m_pMainImgBuf ) break;
 		DisplayImage(m_pMainImgBuf);
+
+		if(waitKey(10) == 27) break;
 	}
 }
 
@@ -228,7 +230,7 @@ void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 		CString ext = dlg.GetFileExt().MakeLower();
 		// Open Image File
 		if( ext == "jpg" ||
-			ext == "png")
+			ext == "png" )
 		{
 			m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
 			DisplayImage(m_pMainImgBuf);
@@ -237,7 +239,7 @@ void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 		}
 		// Open Video File
 		else if(ext == "mp4") {
-			m_pMainVideoBuf = cvCaptureFromFile(dlg.GetPathName());
+			m_pMainVideoBuf = cvCreateFileCapture(dlg.GetPathName());
 			DisplayVideo(m_pMainVideoBuf);
 			cvReleaseCapture(&m_pMainVideoBuf);
 			m_pMainImgBuf = NULL;
