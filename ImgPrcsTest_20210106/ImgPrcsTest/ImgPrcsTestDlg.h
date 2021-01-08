@@ -42,4 +42,5 @@ public:
 	void DisplayVideo(CvCapture* pVideo);
 	
 	afx_msg void OnBnClickedButtonOpenfile();
+	virtual BOOL DestroyWindow();
 };

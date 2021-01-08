@@ -57,8 +57,6 @@ CImgPrcsTestDlg::CImgPrcsTestDlg(CWnd* pParent /*=NULL*/)
 	m_pMainVideoBuf = NULL;
 }
 CImgPrcsTestDlg::~CImgPrcsTestDlg() {
-	//cvReleaseImage  ( &m_pMainImgBuf );
-	//cvReleaseCapture(&m_pMainVideoBuf);
 }
 
 void CImgPrcsTestDlg::DoDataExchange(CDataExchange* pDX)
@@ -151,7 +149,9 @@ void CImgPrcsTestDlg::OnPaint()
 	}
 	else
 	{
-		
+		if(m_pMainImgBuf)
+			DisplayImage(m_pMainImgBuf);
+
 		CDialog::OnPaint();
 	}
 
@@ -215,8 +215,6 @@ void CImgPrcsTestDlg::DisplayVideo(CvCapture* pVideo) {
 		m_pMainImgBuf = cvRetrieveFrame(pVideo);
 		if( !m_pMainImgBuf ) break;
 		DisplayImage(m_pMainImgBuf);
-
-		if(waitKey(10) == 27) break;
 	}
 }
 
@@ -226,23 +224,37 @@ void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 		_T("image|*.jpg;*.png|video|*.mp4|all|*.*|")
 		);
 
-	if(IDOK == dlg.DoModal()) {
-		CString ext = dlg.GetFileExt().MakeLower();
-		// Open Image File
-		if( ext == "jpg" ||
-			ext == "png" )
-		{
-			m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
-			DisplayImage(m_pMainImgBuf);
-			cvReleaseImage(&m_pMainImgBuf);
-			m_pMainImgBuf = NULL;
-		}
-		// Open Video File
-		else if(ext == "mp4") {
-			m_pMainVideoBuf = cvCreateFileCapture(dlg.GetPathName());
-			DisplayVideo(m_pMainVideoBuf);
-			cvReleaseCapture(&m_pMainVideoBuf);
-			m_pMainImgBuf = NULL;
-		}
+	if(IDOK != dlg.DoModal())
+	{
+		AfxMessageBox("파일을 선택하지 않았습니다.");
+		return;
 	}
+
+	CString ext = dlg.GetFileExt().MakeLower();
+	// Open Image File
+	if( ext == "jpg" ||
+		ext == "png" )
+	{
+		if(m_pMainImgBuf)
+			cvReleaseImage(&m_pMainImgBuf);
+
+		m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
+		DisplayImage(m_pMainImgBuf);
+	}
+	// Open Video File
+	else if(ext == "mp4")
+	{
+		m_pMainVideoBuf = cvCreateFileCapture(dlg.GetPathName());
+		DisplayVideo(m_pMainVideoBuf);
+		cvReleaseCapture(&m_pMainVideoBuf);
+		m_pMainImgBuf = NULL;
+	}
+}
+
+BOOL CImgPrcsTestDlg::DestroyWindow()
+{
+	cvReleaseImage  ( &m_pMainImgBuf );
+	cvReleaseCapture(&m_pMainVideoBuf);
+
+	return CDialog::DestroyWindow();
 }

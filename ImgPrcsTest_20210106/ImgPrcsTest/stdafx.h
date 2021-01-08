@@ -50,9 +50,6 @@
 #define cvCopyImage( src, dst )         cvCopy( src, dst, 0 )
 #include "imgcodecs\imgcodecs_c.h"
 
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
 using namespace cv; 
 
