@@ -61,6 +61,9 @@ using namespace cv;
 	#pragma comment(lib, "opencv_highgui310d.lib")
 	#pragma comment(lib, "opencv_imgproc310d.lib")
 	#pragma comment(lib, "opencv_imgcodecs310d.lib")
+	#pragma comment(lib, "opencv_video310d.lib")
+	#pragma comment(lib, "opencv_videoio310d.lib")
+	#pragma comment(lib, "opencv_videostab310d.lib")
 #else
 	#pragma comment(lib, "opencv_core310.lib")
 	#pragma comment(lib, "opencv_highgui310.lib")

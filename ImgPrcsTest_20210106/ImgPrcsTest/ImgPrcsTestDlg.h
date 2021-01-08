@@ -34,10 +34,12 @@ protected:
 
 private:
 	IplImage* m_pMainImgBuf;
+	CvCapture* m_pMainVideoBuf;
 	CStatic m_DispCtrl;
 
 public:
 	void DisplayImage(IplImage* pImage);//, CDC *pDC, CRect& rect);
+	void DisplayVideo(CvCapture* pVideo);
 	
 	afx_msg void OnBnClickedButtonOpenfile();
 };
