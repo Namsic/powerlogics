@@ -52,10 +52,13 @@ CImgPrcsTestDlg::CImgPrcsTestDlg(CWnd* pParent /*=NULL*/)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
+	// Initialize pointer
 	m_pMainImgBuf = NULL;
+	m_pMainVideoBuf = NULL;
 }
 CImgPrcsTestDlg::~CImgPrcsTestDlg() {
-	//cvReleaseImage(&m_pMainImgBuf);
+	//cvReleaseImage  ( &m_pMainImgBuf );
+	//cvReleaseCapture(&m_pMainVideoBuf);
 }
 
 void CImgPrcsTestDlg::DoDataExchange(CDataExchange* pDX)
@@ -206,14 +209,38 @@ void CImgPrcsTestDlg::DisplayImage(IplImage* pImage)//, CDC *pDC, CRect& rect)
 	cvReleaseImage(&tempImage);
 }
 
+void CImgPrcsTestDlg::DisplayVideo(CvCapture* pVideo) {
+	while(TRUE) {
+		cvGrabFrame(pVideo);
+		m_pMainImgBuf = cvRetrieveFrame(pVideo);
+		if( !m_pMainImgBuf ) break;
+		DisplayImage(m_pMainImgBuf);
+	}
+}
+
 void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 {
-	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY, _T("img|*.jpg|"));
+	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY, 
+		_T("image|*.jpg;*.png|video|*.mp4|all|*.*|")
+		);
 
 	if(IDOK == dlg.DoModal()) {
-		m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
-		DisplayImage(m_pMainImgBuf);
-		cvReleaseImage(&m_pMainImgBuf);
-		m_pMainImgBuf = NULL;
+		CString ext = dlg.GetFileExt().MakeLower();
+		// Open Image File
+		if( ext == "jpg" ||
+			ext == "png")
+		{
+			m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
+			DisplayImage(m_pMainImgBuf);
+			cvReleaseImage(&m_pMainImgBuf);
+			m_pMainImgBuf = NULL;
+		}
+		// Open Video File
+		else if(ext == "mp4") {
+			m_pMainVideoBuf = cvCaptureFromFile(dlg.GetPathName());
+			DisplayVideo(m_pMainVideoBuf);
+			cvReleaseCapture(&m_pMainVideoBuf);
+			m_pMainImgBuf = NULL;
+		}
 	}
 }
