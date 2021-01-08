@@ -12,6 +12,7 @@ class CImgPrcsTestDlg : public CDialog
 // 생성입니다.
 public:
 	CImgPrcsTestDlg(CWnd* pParent = NULL);	// 표준 생성자입니다.
+	~CImgPrcsTestDlg();
 
 // 대화 상자 데이터입니다.
 	enum { IDD = IDD_IMGPRCSTEST_DIALOG };
@@ -38,4 +39,5 @@ private:
 public:
 	void DisplayImage(IplImage* pImage);//, CDC *pDC, CRect& rect);
 	
+	afx_msg void OnBnClickedButtonOpenfile();
 };

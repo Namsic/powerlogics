@@ -51,6 +51,11 @@ CImgPrcsTestDlg::CImgPrcsTestDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CImgPrcsTestDlg::IDD, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
+	m_pMainImgBuf = NULL;
+}
+CImgPrcsTestDlg::~CImgPrcsTestDlg() {
+	cvReleaseImage(&m_pMainImgBuf);
 }
 
 void CImgPrcsTestDlg::DoDataExchange(CDataExchange* pDX)
@@ -64,6 +69,7 @@ BEGIN_MESSAGE_MAP(CImgPrcsTestDlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	//}}AFX_MSG_MAP
+	ON_BN_CLICKED(IDC_Button_OpenFile, &CImgPrcsTestDlg::OnBnClickedButtonOpenfile)
 END_MESSAGE_MAP()
 
 
@@ -198,4 +204,15 @@ void CImgPrcsTestDlg::DisplayImage(IplImage* pImage)//, CDC *pDC, CRect& rect)
 	
 	m_DispCtrl.ReleaseDC(pDC);
 	cvReleaseImage(&tempImage);
+}
+
+void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
+{
+	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY, _T("img|*.jpg|"));
+
+	if(IDOK == dlg.DoModal()) {
+		cvReleaseImage(&m_pMainImgBuf);
+		m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
+		DisplayImage(m_pMainImgBuf);
+	}
 }
