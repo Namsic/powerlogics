@@ -33,13 +33,20 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
+	IplImage* m_pDisplayImgBuf;
+
 	IplImage* m_pMainImgBuf;
-	CvCapture* m_pMainVideoBuf;
+	IplImage* m_pHueImgBuf;
+	IplImage* m_pSatImgBuf;
+	IplImage* m_pValImgBuf;
+
 	CStatic m_DispCtrl;
+	int m_mRadio_HSV;
 
 public:
 	void DisplayImage(IplImage* pImage);//, CDC *pDC, CRect& rect);
 	
 	afx_msg void OnBnClickedButtonOpenfile();
+	afx_msg void OnBnClickedRadioHSV();
 	virtual BOOL DestroyWindow();
 };

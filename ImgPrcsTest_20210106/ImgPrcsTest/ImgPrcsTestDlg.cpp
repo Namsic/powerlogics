@@ -15,6 +15,7 @@
 
 CImgPrcsTestDlg::CImgPrcsTestDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CImgPrcsTestDlg::IDD, pParent)
+	, m_mRadio_HSV(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -26,6 +27,7 @@ void CImgPrcsTestDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_STATIC_MAIN_DISP, m_DispCtrl);
+	DDX_Radio(pDX, IDC_Radio_HSV_Origin, m_mRadio_HSV);
 }
 
 BEGIN_MESSAGE_MAP(CImgPrcsTestDlg, CDialog)
@@ -34,6 +36,10 @@ BEGIN_MESSAGE_MAP(CImgPrcsTestDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	//}}AFX_MSG_MAP
 	ON_BN_CLICKED(IDC_Button_OpenFile, &CImgPrcsTestDlg::OnBnClickedButtonOpenfile)
+	ON_BN_CLICKED(IDC_Radio_HSV_Origin, &CImgPrcsTestDlg::OnBnClickedRadioHSV)
+	ON_BN_CLICKED(IDC_Radio_HSV_Hue, &CImgPrcsTestDlg::OnBnClickedRadioHSV)
+	ON_BN_CLICKED(IDC_Radio_HSV_Saturation, &CImgPrcsTestDlg::OnBnClickedRadioHSV)
+	ON_BN_CLICKED(IDC_Radio_HSV_Value, &CImgPrcsTestDlg::OnBnClickedRadioHSV)
 END_MESSAGE_MAP()
 
 
@@ -50,11 +56,26 @@ BOOL CImgPrcsTestDlg::OnInitDialog()
 
 	
 	// Initialize pointer
+	m_pDisplayImgBuf = NULL;
 	m_pMainImgBuf = NULL;
+	m_pHueImgBuf = NULL;
+	m_pSatImgBuf = NULL;
+	m_pValImgBuf = NULL;
 
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
+
+BOOL CImgPrcsTestDlg::DestroyWindow()
+{
+	cvReleaseImage(&m_pMainImgBuf);
+	cvReleaseImage(&m_pHueImgBuf);
+	cvReleaseImage(&m_pSatImgBuf);
+	cvReleaseImage(&m_pValImgBuf);
+
+	return CDialog::DestroyWindow();
+}
+
 
 void CImgPrcsTestDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
@@ -86,7 +107,7 @@ void CImgPrcsTestDlg::OnPaint()
 	}
 	else
 	{
-		DisplayImage(m_pMainImgBuf);
+		DisplayImage(m_pDisplayImgBuf);
 
 		CDialog::OnPaint();
 	}
@@ -129,7 +150,9 @@ void CImgPrcsTestDlg::DisplayImage(IplImage* pImage)//, CDC *pDC, CRect& rect)
 	}
 	else if (pImage->nChannels == 3)
 	{
-		tempImage = cvCloneImage(pImage);
+		tempImage = cvCreateImage(cvSize(pImage->width, pImage->height), IPL_DEPTH_8U, 3);
+		cvCvtColor(pImage, tempImage, CV_HSV2BGR);
+		//tempImage = cvCloneImage(pImage);
 	}
 
 	bitmapInfo.bmiHeader.biBitCount = tempImage->depth * tempImage->nChannels;
@@ -148,8 +171,7 @@ void CImgPrcsTestDlg::DisplayImage(IplImage* pImage)//, CDC *pDC, CRect& rect)
 void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 {
 	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY, 
-		_T("image|*.jpg;*.png|all|*.*|")
-		);
+		_T("image|*.jpg;*.png|all|*.*|"));
 
 	if(IDOK != dlg.DoModal())
 	{
@@ -158,19 +180,52 @@ void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 	}
 
 	CString ext = dlg.GetFileExt().MakeLower();
-	// Open Image File
-	if( ext == "jpg" ||
-		ext == "png" )
+	if( ext != "jpg" && ext != "png" )
 	{
-		cvReleaseImage(&m_pMainImgBuf);
-		m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
-		DisplayImage(m_pMainImgBuf);
+		AfxMessageBox("영상 파일이 아닙니다.");
+		return;
 	}
+
+	// Release Image
+	cvReleaseImage(&m_pMainImgBuf);
+	cvReleaseImage(&m_pHueImgBuf);
+	cvReleaseImage(&m_pSatImgBuf);
+	cvReleaseImage(&m_pValImgBuf);
+	
+	m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
+	
+	cvCvtColor(m_pMainImgBuf, m_pMainImgBuf, COLOR_BGR2HSV);
+	
+	m_pHueImgBuf = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
+	m_pSatImgBuf = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
+	m_pValImgBuf = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
+	cvSplit(m_pMainImgBuf, m_pHueImgBuf, m_pSatImgBuf, m_pValImgBuf, NULL);
+
+	m_mRadio_HSV = 0;
+	UpdateData(0);
+
+	m_pDisplayImgBuf = m_pMainImgBuf;
+	DisplayImage(m_pDisplayImgBuf);
 }
 
-BOOL CImgPrcsTestDlg::DestroyWindow()
+void CImgPrcsTestDlg::OnBnClickedRadioHSV()
 {
-	cvReleaseImage(&m_pMainImgBuf);
-
-	return CDialog::DestroyWindow();
+	UpdateData(TRUE);
+	switch(m_mRadio_HSV)
+	{
+	case 0:
+		m_pDisplayImgBuf = m_pMainImgBuf;
+		break;
+	case 1:
+		m_pDisplayImgBuf = m_pHueImgBuf;
+		break;
+	case 2:
+		m_pDisplayImgBuf = m_pSatImgBuf;
+		break;
+	case 3:
+		m_pDisplayImgBuf = m_pValImgBuf;
+		break;
+	}
+	cvInRange(m_pMainImgBuf, &cvScalar(0, 30, 30), &cvScalar(10, 255, 255), m_pDisplayImgBuf);
+	DisplayImage(m_pDisplayImgBuf);
 }

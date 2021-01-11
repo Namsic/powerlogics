@@ -87,6 +87,10 @@ BEGIN
     PUSHBUTTON      "√Îº“",IDCANCEL,344,245,50,14
     CONTROL         "",IDC_Static_Display,"Static",SS_BLACKFRAME,7,7,279,252
     PUSHBUTTON      "Open",IDC_Button_OpenFile,293,12,93,19
+    PUSHBUTTON      "prev",IDC_Button_prev,293,35,28,21
+    PUSHBUTTON      "next",IDC_Button_next,357,35,28,21
+    CTEXT           "-",IDC_Static_curFrame,325,35,28,21,SS_CENTERIMAGE
+    CONTROL         "",IDC_Slider_Video,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,288,57,100,15
 END
 
 

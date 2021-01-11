@@ -21,6 +21,7 @@ void CPracticeOpenCVDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_Static_Display, m_StaticDisplay);
+	DDX_Control(pDX, IDC_Slider_Video, m_sldVideo);
 }
 
 BEGIN_MESSAGE_MAP(CPracticeOpenCVDlg, CDialog)
@@ -29,6 +30,9 @@ BEGIN_MESSAGE_MAP(CPracticeOpenCVDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	//}}AFX_MSG_MAP
 	ON_BN_CLICKED(IDC_Button_OpenFile, &CPracticeOpenCVDlg::OnBnClickedButtonOpenfile)
+	ON_BN_CLICKED(IDC_Button_prev, &CPracticeOpenCVDlg::OnBnClickedButtonprev)
+	ON_BN_CLICKED(IDC_Button_next, &CPracticeOpenCVDlg::OnBnClickedButtonnext)
+	ON_WM_HSCROLL()
 END_MESSAGE_MAP()
 
 
@@ -43,7 +47,7 @@ BOOL CPracticeOpenCVDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 큰 아이콘을 설정합니다.
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
-	//m_matDisplay = NULL;
+	EnableVideoControl(FALSE);
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -128,6 +132,14 @@ void CPracticeOpenCVDlg::DisplayVideo(VideoCapture capture)
 	}
 }
 
+void CPracticeOpenCVDlg::EnableVideoControl(bool enable)
+{
+	GetDlgItem(IDC_Button_prev)->EnableWindow(enable);
+	GetDlgItem(IDC_Static_curFrame)->EnableWindow(enable);
+	GetDlgItem(IDC_Button_next)->EnableWindow(enable);
+	GetDlgItem(IDC_Slider_Video)->EnableWindow(enable);
+}
+
 void CPracticeOpenCVDlg::OnBnClickedButtonOpenfile()
 {
 	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY, _T("file|*.*|"));
@@ -145,10 +157,52 @@ void CPracticeOpenCVDlg::OnBnClickedButtonOpenfile()
 	{
 		m_matDisplay = imread(strPath);
 		DrawImage(m_matDisplay);
+		EnableVideoControl(FALSE);
 	}
 	// Open Video File
 	else if(ext == "mp4")
 	{
-		DisplayVideo(VideoCapture(strPath));
+		m_mainCapture = VideoCapture(strPath);
+		m_sldVideo.SetRange(0, m_mainCapture.get(CAP_PROP_FRAME_COUNT));
+		m_sldVideo.SetPos(0);
+		SetDlgItemInt(IDC_Static_curFrame, m_sldVideo.GetPos());
+		
+		m_mainCapture >> m_matDisplay;
+		DrawImage(m_matDisplay);
+
+		EnableVideoControl(TRUE);
 	}
+}
+
+void CPracticeOpenCVDlg::OnBnClickedButtonprev()
+{
+	m_sldVideo.SetPos(m_sldVideo.GetPos() - 1);
+	SetDlgItemInt(IDC_Static_curFrame, m_sldVideo.GetPos());
+	m_mainCapture.set(CV_CAP_PROP_POS_FRAMES, m_sldVideo.GetPos());
+	
+	m_mainCapture >> m_matDisplay;
+	DrawImage(m_matDisplay);
+}
+
+void CPracticeOpenCVDlg::OnBnClickedButtonnext()
+{
+	m_sldVideo.SetPos(m_sldVideo.GetPos() + 1);
+	SetDlgItemInt(IDC_Static_curFrame, m_sldVideo.GetPos());
+	m_mainCapture >> m_matDisplay;
+	DrawImage(m_matDisplay);
+}
+
+void CPracticeOpenCVDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	if(pScrollBar)
+	{
+		if(pScrollBar == (CScrollBar*)&m_sldVideo)
+		{
+			SetDlgItemInt(IDC_Static_curFrame, m_sldVideo.GetPos());
+			m_mainCapture >> m_matDisplay;
+			DrawImage(m_matDisplay);
+		}
+	}
+
+	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
 }
