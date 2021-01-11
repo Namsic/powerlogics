@@ -39,7 +39,6 @@ private:
 
 public:
 	void DisplayImage(IplImage* pImage);//, CDC *pDC, CRect& rect);
-	void DisplayVideo(CvCapture* pVideo);
 	
 	afx_msg void OnBnClickedButtonOpenfile();
 	virtual BOOL DestroyWindow();

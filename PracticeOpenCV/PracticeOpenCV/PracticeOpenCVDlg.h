@@ -34,7 +34,9 @@ protected:
 private:
 	void DrawImage(Mat mat_image);
 	void DisplayVideo(VideoCapture capture);
+
 	CStatic m_StaticDisplay;
+	Mat m_matDisplay;
 public:
 	afx_msg void OnBnClickedButtonOpenfile();
 };

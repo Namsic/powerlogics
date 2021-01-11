@@ -3,12 +3,10 @@
 // Used by ImgPrcsTest.rc
 //
 #define IDM_ABOUTBOX                    0x0010
-#define IDD_ABOUTBOX                    100
 #define IDS_ABOUTBOX                    101
 #define IDD_IMGPRCSTEST_DIALOG          102
 #define IDR_MAINFRAME                   128
 #define IDC_STATIC_MAIN_DISP            1000
-#define IDC_BUTTON1                     1001
 #define IDC_Button_OpenFile             1002
 
 // Next default values for new objects

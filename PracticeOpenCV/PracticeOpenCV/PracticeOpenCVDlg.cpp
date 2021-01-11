@@ -43,7 +43,7 @@ BOOL CPracticeOpenCVDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 큰 아이콘을 설정합니다.
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
-	// TODO: 여기에 추가 초기화 작업을 추가합니다.
+	//m_matDisplay = NULL;
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -78,6 +78,7 @@ void CPracticeOpenCVDlg::OnPaint()
 	}
 	else
 	{
+		DrawImage(m_matDisplay);
 		CDialog::OnPaint();
 	}
 }
@@ -131,21 +132,23 @@ void CPracticeOpenCVDlg::OnBnClickedButtonOpenfile()
 {
 	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY, _T("file|*.*|"));
 
-	if(IDOK == dlg.DoModal()) {
-		// Open Image File
-		CString ext = dlg.GetFileExt().MakeLower();
-		CString path = dlg.GetPathName();
-		CT2CA pstring(path);
-		std::string strPath(pstring);
-		if( ext == "jpg" ||
-			ext == "png" )
-		{
-			DrawImage(imread(strPath));
-		}
-		// Open Video File
-		else if(ext == "mp4")
-		{
-			DisplayVideo(VideoCapture(strPath));
-		}
+	if(IDOK != dlg.DoModal())
+		return;
+
+	// Open Image File
+	CString ext = dlg.GetFileExt().MakeLower();
+	CString path = dlg.GetPathName();
+	CT2CA pstring(path);
+	std::string strPath(pstring);
+	if( ext == "jpg" ||
+		ext == "png" )
+	{
+		m_matDisplay = imread(strPath);
+		DrawImage(m_matDisplay);
+	}
+	// Open Video File
+	else if(ext == "mp4")
+	{
+		DisplayVideo(VideoCapture(strPath));
 	}
 }
