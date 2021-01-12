@@ -43,7 +43,14 @@ private:
 
 	CStatic m_DispCtrl;
 	int m_Radio_HSV;
+	int m_Edit_LowerHue;
+	int m_Edit_UpperHue;
+	int m_Edit_LowerSat;
+	int m_Edit_UpperSat;
+	int m_Edit_LowerVal;
+	int m_Edit_UpperVal;
 
-public:
 	void DisplayImage(IplImage* pImage);//, CDC *pDC, CRect& rect);
+	void FilterImage();
+	void EnableWidget(bool enabled);
 };

@@ -17,6 +17,12 @@
 CImgPrcsTestDlg::CImgPrcsTestDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CImgPrcsTestDlg::IDD, pParent)
 	, m_Radio_HSV(0)
+	, m_Edit_LowerHue(0)
+	, m_Edit_UpperHue(180)
+	, m_Edit_LowerSat(0)
+	, m_Edit_UpperSat(255)
+	, m_Edit_LowerVal(0)
+	, m_Edit_UpperVal(255)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -26,6 +32,12 @@ void CImgPrcsTestDlg::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_STATIC_MAIN_DISP, m_DispCtrl);
 	DDX_Radio(pDX, IDC_Radio_HSV0, m_Radio_HSV);
+	DDX_Text(pDX, IDC_Edit_LowerHue, m_Edit_LowerHue);
+	DDX_Text(pDX, IDC_Edit_UpperHue, m_Edit_UpperHue);
+	DDX_Text(pDX, IDC_Edit_LowerSat, m_Edit_LowerSat);
+	DDX_Text(pDX, IDC_Edit_UpperSat, m_Edit_UpperSat);
+	DDX_Text(pDX, IDC_Edit_LowerVal, m_Edit_LowerVal);
+	DDX_Text(pDX, IDC_Edit_UpperVal, m_Edit_UpperVal);
 }
 
 BEGIN_MESSAGE_MAP(CImgPrcsTestDlg, CDialog)
@@ -38,6 +50,12 @@ BEGIN_MESSAGE_MAP(CImgPrcsTestDlg, CDialog)
 	ON_BN_CLICKED(IDC_Radio_HSV1, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
 	ON_BN_CLICKED(IDC_Radio_HSV2, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
 	ON_BN_CLICKED(IDC_Radio_HSV3, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
+	ON_EN_CHANGE(IDC_Edit_LowerHue, &CImgPrcsTestDlg::FilterImage)
+	ON_EN_CHANGE(IDC_Edit_UpperHue, &CImgPrcsTestDlg::FilterImage)
+	ON_EN_CHANGE(IDC_Edit_LowerSat, &CImgPrcsTestDlg::FilterImage)
+	ON_EN_CHANGE(IDC_Edit_UpperSat, &CImgPrcsTestDlg::FilterImage)
+	ON_EN_CHANGE(IDC_Edit_LowerVal, &CImgPrcsTestDlg::FilterImage)
+	ON_EN_CHANGE(IDC_Edit_UpperVal, &CImgPrcsTestDlg::FilterImage)
 END_MESSAGE_MAP()
 
 
@@ -58,6 +76,8 @@ BOOL CImgPrcsTestDlg::OnInitDialog()
 	m_pSatBuf = NULL;
 	m_pValBuf = NULL;
 
+	EnableWidget(0);
+
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
 
@@ -71,6 +91,21 @@ BOOL CImgPrcsTestDlg::DestroyWindow()
 	return CDialog::DestroyWindow();
 }
 
+BOOL CImgPrcsTestDlg::PreTranslateMessage(MSG* pMsg)
+{
+	if(pMsg->message == WM_KEYUP)
+	{
+		switch(pMsg->wParam)
+		{
+		case 0x31:  // '1'
+			break;
+		case 0x32:  // '2'
+			break;
+		}
+	}
+
+	return CDialog::PreTranslateMessage(pMsg);
+}
 
 // 대화 상자에 최소화 단추를 추가할 경우 아이콘을 그리려면
 //  아래 코드가 필요합니다. 문서/뷰 모델을 사용하는 MFC 응용 프로그램의 경우에는
@@ -138,6 +173,7 @@ void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 	UpdateData(0);
 	m_pDisplayImgBuf = m_pMainImgBuf;
 	DisplayImage(m_pDisplayImgBuf);
+	EnableWidget(1);
 }
 
 void CImgPrcsTestDlg::OnBnClickedRadioHsv()
@@ -160,26 +196,6 @@ void CImgPrcsTestDlg::OnBnClickedRadioHsv()
 		break;
 	}
 	DisplayImage(m_pDisplayImgBuf);
-}
-
-BOOL CImgPrcsTestDlg::PreTranslateMessage(MSG* pMsg)
-{
-	if(pMsg->message == WM_KEYUP)
-	{
-		switch(pMsg->wParam)
-		{
-		case 0x31:  // '1'
-			break;
-		case 0x32:  // '2'
-			break;
-		case 0x33:  // '3'
-			break;
-		case 0x34:  // '4'
-			break;
-		}
-	}
-
-	return CDialog::PreTranslateMessage(pMsg);
 }
 
 void CImgPrcsTestDlg::DisplayImage(IplImage* pImage)//, CDC *pDC, CRect& rect)
@@ -222,7 +238,55 @@ void CImgPrcsTestDlg::DisplayImage(IplImage* pImage)//, CDC *pDC, CRect& rect)
 		0, 0, tempImage->width, tempImage->height,
 		tempImage->imageData, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
 
-	
 	m_DispCtrl.ReleaseDC(pDC);
 	cvReleaseImage(&tempImage);
+}
+
+void CImgPrcsTestDlg::FilterImage()
+{
+	UpdateData(1);
+	if(m_Edit_LowerHue > 180) m_Edit_UpperHue = 180;
+	if(m_Edit_LowerSat > 255) m_Edit_UpperSat = 255;
+	if(m_Edit_LowerVal > 255) m_Edit_UpperVal = 255;
+	if(m_Edit_UpperHue > 180) m_Edit_UpperHue = 180;
+	if(m_Edit_UpperSat > 255) m_Edit_UpperSat = 255;
+	if(m_Edit_UpperVal > 255) m_Edit_UpperVal = 255;
+	UpdateData(0);
+
+	IplImage* tempImage = cvCloneImage(m_pMainImgBuf);
+
+	for(int r=0; r<tempImage->height; r++)
+		for(int c=0; c<tempImage->width; c++)
+		{
+			int index = r * tempImage->widthStep + c * tempImage->nChannels;
+			unsigned char hue = tempImage->imageData[index];
+			unsigned char sat = tempImage->imageData[index+1];
+			unsigned char val = tempImage->imageData[index+2];
+			if( hue < m_Edit_LowerHue || hue > m_Edit_UpperHue ||
+				sat < m_Edit_LowerSat || sat > m_Edit_UpperSat || 
+				val < m_Edit_LowerVal || val > m_Edit_UpperVal )
+			{
+				tempImage->imageData[index] = 0;
+				tempImage->imageData[index+1] = 0;
+				tempImage->imageData[index+2] = 0;
+			}
+		}
+
+	DisplayImage(tempImage);
+	cvReleaseImage(&tempImage);
+}
+
+void CImgPrcsTestDlg::EnableWidget(bool enable)
+{
+	GetDlgItem(IDC_Radio_HSV0)->EnableWindow(enable);
+	GetDlgItem(IDC_Radio_HSV1)->EnableWindow(enable);
+	GetDlgItem(IDC_Radio_HSV2)->EnableWindow(enable);
+	GetDlgItem(IDC_Radio_HSV3)->EnableWindow(enable);
+
+	GetDlgItem(IDC_Edit_LowerHue)->EnableWindow(enable);
+	GetDlgItem(IDC_Edit_UpperHue)->EnableWindow(enable);
+	GetDlgItem(IDC_Edit_LowerSat)->EnableWindow(enable);
+	GetDlgItem(IDC_Edit_UpperSat)->EnableWindow(enable);
+	GetDlgItem(IDC_Edit_LowerVal)->EnableWindow(enable);
+	GetDlgItem(IDC_Edit_UpperVal)->EnableWindow(enable);
 }
