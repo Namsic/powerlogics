@@ -27,19 +27,23 @@ protected:
 	// 생성된 메시지 맵 함수
 	virtual BOOL OnInitDialog();
 	virtual BOOL DestroyWindow();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnBnClickedButtonOpenfile();
+	afx_msg void OnBnClickedRadioHsv();
 	DECLARE_MESSAGE_MAP()
 
 private:
+	IplImage* m_pDisplayImgBuf;
 	IplImage* m_pMainImgBuf;
 	IplImage* m_pHueBuf;
 	IplImage* m_pSatBuf;
 	IplImage* m_pValBuf;
+
 	CStatic m_DispCtrl;
+	int m_Radio_HSV;
 
 public:
 	void DisplayImage(IplImage* pImage);//, CDC *pDC, CRect& rect);
-	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
