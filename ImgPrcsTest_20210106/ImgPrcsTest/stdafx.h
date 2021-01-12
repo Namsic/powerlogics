@@ -44,13 +44,13 @@
 
 
 // open cv
-#include "cv.h"
-#include "highgui.h"
-#include "cxcore.h"
+#include "opencv\cv.h"
+#include "opencv\highgui.h"
+#include "opencv\cxcore.h"
 #define cvCopyImage( src, dst )         cvCopy( src, dst, 0 )
-#include "imgcodecs\imgcodecs_c.h"
+#include "opencv2\imgcodecs\imgcodecs_c.h"
 
-#include <opencv2/opencv.hpp>
+#include <opencv2\opencv.hpp>
 using namespace cv; 
 
 #ifdef _DEBUG
@@ -58,9 +58,6 @@ using namespace cv;
 	#pragma comment(lib, "opencv_highgui310d.lib")
 	#pragma comment(lib, "opencv_imgproc310d.lib")
 	#pragma comment(lib, "opencv_imgcodecs310d.lib")
-	#pragma comment(lib, "opencv_video310d.lib")
-	#pragma comment(lib, "opencv_videoio310d.lib")
-	#pragma comment(lib, "opencv_videostab310d.lib")
 #else
 	#pragma comment(lib, "opencv_core310.lib")
 	#pragma comment(lib, "opencv_highgui310.lib")

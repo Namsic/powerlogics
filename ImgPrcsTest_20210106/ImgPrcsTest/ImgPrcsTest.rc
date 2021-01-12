@@ -86,11 +86,7 @@ BEGIN
     DEFPUSHBUTTON   "확인",IDOK,609,447,50,14
     PUSHBUTTON      "취소",IDCANCEL,661,447,50,14
     CONTROL         "",IDC_STATIC_MAIN_DISP,"Static",SS_BLACKFRAME,7,7,572,429
-    PUSHBUTTON      "Open",IDC_Button_OpenFile,585,12,120,24
-    CONTROL         "Origin",IDC_Radio_HSV_Origin,"Button",BS_AUTORADIOBUTTON | WS_GROUP,586,41,34,10
-    CONTROL         "Hue",IDC_Radio_HSV_Hue,"Button",BS_AUTORADIOBUTTON,662,41,29,10
-    CONTROL         "Saturation",IDC_Radio_HSV_Saturation,"Button",BS_AUTORADIOBUTTON,586,57,48,10
-    CONTROL         "Value",IDC_Radio_HSV_Value,"Button",BS_AUTORADIOBUTTON,662,57,33,10
+    PUSHBUTTON      "Open",IDC_Button_OpenFile,588,13,113,28
 END
 
 
