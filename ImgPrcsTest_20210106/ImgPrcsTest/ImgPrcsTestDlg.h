@@ -40,6 +40,7 @@ private:
 	IplImage* m_pHueBuf;
 	IplImage* m_pSatBuf;
 	IplImage* m_pValBuf;
+	IplImage* m_pFilterImgBuf;
 
 	CStatic m_DispCtrl;
 	int m_Radio_HSV;
@@ -53,4 +54,5 @@ private:
 	void DisplayImage(IplImage* pImage);//, CDC *pDC, CRect& rect);
 	void FilterImage();
 	void EnableWidget(bool enabled);
+	void DisplayBlob();
 };

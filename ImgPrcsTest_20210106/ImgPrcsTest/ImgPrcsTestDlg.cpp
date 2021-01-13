@@ -6,6 +6,9 @@
 #include "ImgPrcsTest.h"
 #include "ImgPrcsTestDlg.h"
 
+#include <queue>
+#include <utility>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -50,6 +53,7 @@ BEGIN_MESSAGE_MAP(CImgPrcsTestDlg, CDialog)
 	ON_BN_CLICKED(IDC_Radio_HSV1, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
 	ON_BN_CLICKED(IDC_Radio_HSV2, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
 	ON_BN_CLICKED(IDC_Radio_HSV3, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
+	ON_BN_CLICKED(IDC_Radio_HSV4, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
 	ON_EN_CHANGE(IDC_Edit_LowerHue, &CImgPrcsTestDlg::FilterImage)
 	ON_EN_CHANGE(IDC_Edit_UpperHue, &CImgPrcsTestDlg::FilterImage)
 	ON_EN_CHANGE(IDC_Edit_LowerSat, &CImgPrcsTestDlg::FilterImage)
@@ -75,6 +79,7 @@ BOOL CImgPrcsTestDlg::OnInitDialog()
 	m_pHueBuf = NULL;
 	m_pSatBuf = NULL;
 	m_pValBuf = NULL;
+	m_pFilterImgBuf = NULL;
 
 	EnableWidget(0);
 
@@ -87,6 +92,7 @@ BOOL CImgPrcsTestDlg::DestroyWindow()
 	cvReleaseImage(&m_pHueBuf);
 	cvReleaseImage(&m_pSatBuf);
 	cvReleaseImage(&m_pValBuf);
+	cvReleaseImage(&m_pFilterImgBuf);
 
 	return CDialog::DestroyWindow();
 }
@@ -100,6 +106,11 @@ BOOL CImgPrcsTestDlg::PreTranslateMessage(MSG* pMsg)
 		case 0x31:  // '1'
 			break;
 		case 0x32:  // '2'
+			break;
+		case 0x41:  // 'a'
+			DisplayBlob();
+			break;
+		case 0x53:  // 's'
 			break;
 		}
 	}
@@ -160,6 +171,7 @@ void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 	cvReleaseImage(&m_pHueBuf);
 	cvReleaseImage(&m_pSatBuf);
 	cvReleaseImage(&m_pValBuf);
+	cvReleaseImage(&m_pFilterImgBuf);
 
 	m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
 	cvCvtColor(m_pMainImgBuf, m_pMainImgBuf, CV_BGR2HSV);
@@ -194,6 +206,8 @@ void CImgPrcsTestDlg::OnBnClickedRadioHsv()
 	case 3:
 		m_pDisplayImgBuf = m_pValBuf;
 		break;
+	case 4:
+		m_pDisplayImgBuf = m_pFilterImgBuf;
 	}
 	DisplayImage(m_pDisplayImgBuf);
 }
@@ -245,35 +259,42 @@ void CImgPrcsTestDlg::DisplayImage(IplImage* pImage)//, CDC *pDC, CRect& rect)
 void CImgPrcsTestDlg::FilterImage()
 {
 	UpdateData(1);
-	if(m_Edit_LowerHue > 180) m_Edit_UpperHue = 180;
-	if(m_Edit_LowerSat > 255) m_Edit_UpperSat = 255;
-	if(m_Edit_LowerVal > 255) m_Edit_UpperVal = 255;
+	if(m_Edit_LowerHue > 180) m_Edit_LowerHue = 0;
+	if(m_Edit_LowerSat > 255) m_Edit_LowerSat = 0;
+	if(m_Edit_LowerVal > 255) m_Edit_LowerVal = 0;
 	if(m_Edit_UpperHue > 180) m_Edit_UpperHue = 180;
 	if(m_Edit_UpperSat > 255) m_Edit_UpperSat = 255;
 	if(m_Edit_UpperVal > 255) m_Edit_UpperVal = 255;
+	m_Radio_HSV = 4;
 	UpdateData(0);
 
-	IplImage* tempImage = cvCloneImage(m_pMainImgBuf);
+	cvReleaseImage(&m_pFilterImgBuf);
+	m_pFilterImgBuf = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
 
-	for(int r=0; r<tempImage->height; r++)
-		for(int c=0; c<tempImage->width; c++)
+	for(int r=0; r<m_pFilterImgBuf->height; r++)
+		for(int c=0; c<m_pFilterImgBuf->width; c++)
 		{
-			int index = r * tempImage->widthStep + c * tempImage->nChannels;
-			unsigned char hue = tempImage->imageData[index];
-			unsigned char sat = tempImage->imageData[index+1];
-			unsigned char val = tempImage->imageData[index+2];
+			int m_index = r * m_pMainImgBuf->widthStep + c * 3;
+			int f_index = r * m_pFilterImgBuf->widthStep + c;
+
+			unsigned char hue = m_pMainImgBuf->imageData[m_index];
+			unsigned char sat = m_pMainImgBuf->imageData[m_index+1];
+			unsigned char val = m_pMainImgBuf->imageData[m_index+2];
 			if( hue < m_Edit_LowerHue || hue > m_Edit_UpperHue ||
 				sat < m_Edit_LowerSat || sat > m_Edit_UpperSat || 
 				val < m_Edit_LowerVal || val > m_Edit_UpperVal )
 			{
-				tempImage->imageData[index] = 0;
-				tempImage->imageData[index+1] = 0;
-				tempImage->imageData[index+2] = 0;
+				m_pFilterImgBuf->imageData[f_index] = 0;
+			}
+			else
+			{
+				m_pFilterImgBuf->imageData[f_index] = 255;
 			}
 		}
 
-	DisplayImage(tempImage);
-	cvReleaseImage(&tempImage);
+	m_pDisplayImgBuf = m_pFilterImgBuf;
+	//DisplayImage(m_pDisplayImgBuf);
+	DisplayBlob();
 }
 
 void CImgPrcsTestDlg::EnableWidget(bool enable)
@@ -282,6 +303,14 @@ void CImgPrcsTestDlg::EnableWidget(bool enable)
 	GetDlgItem(IDC_Radio_HSV1)->EnableWindow(enable);
 	GetDlgItem(IDC_Radio_HSV2)->EnableWindow(enable);
 	GetDlgItem(IDC_Radio_HSV3)->EnableWindow(enable);
+	GetDlgItem(IDC_Radio_HSV4)->EnableWindow(enable);
+
+	m_Edit_LowerHue = 0;
+	m_Edit_LowerSat = 0;
+	m_Edit_LowerVal = 0;
+	m_Edit_UpperHue = 180;
+	m_Edit_UpperSat = 255;
+	m_Edit_UpperVal = 255;
 
 	GetDlgItem(IDC_Edit_LowerHue)->EnableWindow(enable);
 	GetDlgItem(IDC_Edit_UpperHue)->EnableWindow(enable);
@@ -289,4 +318,53 @@ void CImgPrcsTestDlg::EnableWidget(bool enable)
 	GetDlgItem(IDC_Edit_UpperSat)->EnableWindow(enable);
 	GetDlgItem(IDC_Edit_LowerVal)->EnableWindow(enable);
 	GetDlgItem(IDC_Edit_UpperVal)->EnableWindow(enable);
+}
+
+void extendBlob(IplImage* pImage, int row, int col, int flag, std::queue<std::pair<int, int>>& queue)
+{
+	// out of range
+	if( row < 0 || row >= pImage->height ||
+		col < 0 || col >= pImage->width )
+		return;
+
+	// pixel is not empty
+	unsigned char val = pImage->imageData[row * pImage->widthStep + col];
+	if(val != 255)
+		return;
+
+	pImage->imageData[row * pImage->widthStep + col] = flag * 30;
+	queue.push(std::make_pair(row, col));
+}
+
+void CImgPrcsTestDlg::DisplayBlob()
+{
+	int count = 0;
+
+	for(int r=0; r<m_pFilterImgBuf->height; r++)
+		for(int c=0; c<m_pFilterImgBuf->width; c++)
+		{
+			unsigned char val = m_pFilterImgBuf->imageData[r * m_pFilterImgBuf->widthStep + c];
+			if(val != 255)
+				continue;
+
+			count++;
+			std::queue<std::pair<int, int>> blobQueue;
+			blobQueue.push(std::make_pair(r, c));
+
+			while(!blobQueue.empty())
+			{
+				int row = blobQueue.front().first;
+				int col = blobQueue.front().second;
+				extendBlob(m_pFilterImgBuf, row-1, col-1, count, blobQueue);
+				extendBlob(m_pFilterImgBuf, row-1, col, count, blobQueue);
+				extendBlob(m_pFilterImgBuf, row-1, col+1, count, blobQueue);
+				extendBlob(m_pFilterImgBuf, row, col-1, count, blobQueue);
+				extendBlob(m_pFilterImgBuf, row, col+1, count, blobQueue);
+				extendBlob(m_pFilterImgBuf, row+1, col-1, count, blobQueue);
+				extendBlob(m_pFilterImgBuf, row+1, col, count, blobQueue);
+				extendBlob(m_pFilterImgBuf, row+1, col+1, count, blobQueue);
+				blobQueue.pop();
+			}
+		}
+	DisplayImage(m_pFilterImgBuf);
 }

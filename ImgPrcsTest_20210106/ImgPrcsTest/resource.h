@@ -12,12 +12,13 @@
 #define IDC_Radio_HSV1                  1003
 #define IDC_Radio_HSV2                  1004
 #define IDC_Radio_HSV3                  1005
-#define IDC_Edit_LowerHue               1006
-#define IDC_Edit_UpperHue               1007
-#define IDC_Edit_LowerSat               1008
-#define IDC_Edit_UpperSat               1009
-#define IDC_Edit_LowerVal               1010
-#define IDC_Edit_UpperVal               1011
+#define IDC_Radio_HSV4                  1006
+#define IDC_Edit_LowerHue               1007
+#define IDC_Edit_UpperHue               1008
+#define IDC_Edit_LowerSat               1009
+#define IDC_Edit_UpperSat               1010
+#define IDC_Edit_LowerVal               1011
+#define IDC_Edit_UpperVal               1012
 
 // Next default values for new objects
 // 
