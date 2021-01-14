@@ -6,7 +6,6 @@
 #include "ImgPrcsTest.h"
 #include "ImgPrcsTestDlg.h"
 
-#include <queue>
 #include <utility>
 
 #ifdef _DEBUG
@@ -51,15 +50,13 @@ BEGIN_MESSAGE_MAP(CImgPrcsTestDlg, CDialog)
 	ON_BN_CLICKED(IDC_Button_OpenFile, &CImgPrcsTestDlg::OnBnClickedButtonOpenfile)
 	ON_BN_CLICKED(IDC_Radio_HSV0, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
 	ON_BN_CLICKED(IDC_Radio_HSV1, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
-	ON_BN_CLICKED(IDC_Radio_HSV2, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
-	ON_BN_CLICKED(IDC_Radio_HSV3, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
-	ON_BN_CLICKED(IDC_Radio_HSV4, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
 	ON_EN_CHANGE(IDC_Edit_LowerHue, &CImgPrcsTestDlg::FilterImage)
 	ON_EN_CHANGE(IDC_Edit_UpperHue, &CImgPrcsTestDlg::FilterImage)
 	ON_EN_CHANGE(IDC_Edit_LowerSat, &CImgPrcsTestDlg::FilterImage)
 	ON_EN_CHANGE(IDC_Edit_UpperSat, &CImgPrcsTestDlg::FilterImage)
 	ON_EN_CHANGE(IDC_Edit_LowerVal, &CImgPrcsTestDlg::FilterImage)
 	ON_EN_CHANGE(IDC_Edit_UpperVal, &CImgPrcsTestDlg::FilterImage)
+	ON_WM_MOUSEMOVE()
 END_MESSAGE_MAP()
 
 
@@ -76,10 +73,8 @@ BOOL CImgPrcsTestDlg::OnInitDialog()
 
 	m_pDisplayImgBuf = NULL;
 	m_pMainImgBuf = NULL;
-	m_pHueBuf = NULL;
-	m_pSatBuf = NULL;
-	m_pValBuf = NULL;
 	m_pFilterImgBuf = NULL;
+	m_blobData = NULL;
 
 	EnableWidget(0);
 
@@ -89,10 +84,8 @@ BOOL CImgPrcsTestDlg::OnInitDialog()
 BOOL CImgPrcsTestDlg::DestroyWindow()
 {
 	cvReleaseImage(&m_pMainImgBuf);
-	cvReleaseImage(&m_pHueBuf);
-	cvReleaseImage(&m_pSatBuf);
-	cvReleaseImage(&m_pValBuf);
 	cvReleaseImage(&m_pFilterImgBuf);
+	delete m_blobData;
 
 	return CDialog::DestroyWindow();
 }
@@ -108,7 +101,6 @@ BOOL CImgPrcsTestDlg::PreTranslateMessage(MSG* pMsg)
 		case 0x32:  // '2'
 			break;
 		case 0x41:  // 'a'
-			DisplayBlob();
 			break;
 		case 0x53:  // 's'
 			break;
@@ -168,18 +160,12 @@ void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 		return;
 
 	cvReleaseImage(&m_pMainImgBuf);
-	cvReleaseImage(&m_pHueBuf);
-	cvReleaseImage(&m_pSatBuf);
-	cvReleaseImage(&m_pValBuf);
 	cvReleaseImage(&m_pFilterImgBuf);
+	delete m_blobData;
+	m_blobData = NULL;
 
 	m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
 	cvCvtColor(m_pMainImgBuf, m_pMainImgBuf, CV_BGR2HSV);
-
-	m_pHueBuf = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
-	m_pSatBuf = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
-	m_pValBuf = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
-	cvSplit(m_pMainImgBuf, m_pHueBuf, m_pSatBuf, m_pValBuf, NULL);
 
 	m_Radio_HSV = 0;
 	UpdateData(0);
@@ -198,15 +184,6 @@ void CImgPrcsTestDlg::OnBnClickedRadioHsv()
 		m_pDisplayImgBuf = m_pMainImgBuf;
 		break;
 	case 1:
-		m_pDisplayImgBuf = m_pHueBuf;
-		break;
-	case 2:
-		m_pDisplayImgBuf = m_pSatBuf;
-		break;
-	case 3:
-		m_pDisplayImgBuf = m_pValBuf;
-		break;
-	case 4:
 		m_pDisplayImgBuf = m_pFilterImgBuf;
 	}
 	DisplayImage(m_pDisplayImgBuf);
@@ -265,7 +242,7 @@ void CImgPrcsTestDlg::FilterImage()
 	if(m_Edit_UpperHue > 180) m_Edit_UpperHue = 180;
 	if(m_Edit_UpperSat > 255) m_Edit_UpperSat = 255;
 	if(m_Edit_UpperVal > 255) m_Edit_UpperVal = 255;
-	m_Radio_HSV = 4;
+	m_Radio_HSV = 1;
 	UpdateData(0);
 
 	cvReleaseImage(&m_pFilterImgBuf);
@@ -288,22 +265,19 @@ void CImgPrcsTestDlg::FilterImage()
 			}
 			else
 			{
-				m_pFilterImgBuf->imageData[f_index] = 255;
+				m_pFilterImgBuf->imageData[f_index] = -1;
 			}
 		}
+	LabelBlob();
 
 	m_pDisplayImgBuf = m_pFilterImgBuf;
-	//DisplayImage(m_pDisplayImgBuf);
-	DisplayBlob();
+	DisplayImage(m_pDisplayImgBuf);
 }
 
 void CImgPrcsTestDlg::EnableWidget(bool enable)
 {
 	GetDlgItem(IDC_Radio_HSV0)->EnableWindow(enable);
 	GetDlgItem(IDC_Radio_HSV1)->EnableWindow(enable);
-	GetDlgItem(IDC_Radio_HSV2)->EnableWindow(enable);
-	GetDlgItem(IDC_Radio_HSV3)->EnableWindow(enable);
-	GetDlgItem(IDC_Radio_HSV4)->EnableWindow(enable);
 
 	m_Edit_LowerHue = 0;
 	m_Edit_LowerSat = 0;
@@ -320,7 +294,7 @@ void CImgPrcsTestDlg::EnableWidget(bool enable)
 	GetDlgItem(IDC_Edit_UpperVal)->EnableWindow(enable);
 }
 
-void extendBlob(IplImage* pImage, int row, int col, int flag, std::queue<std::pair<int, int>>& queue)
+void CImgPrcsTestDlg::extendBlob(IplImage* pImage, int row, int col, int flag, std::queue<std::pair<int, int>>& queue)
 {
 	// out of range
 	if( row < 0 || row >= pImage->height ||
@@ -328,26 +302,31 @@ void extendBlob(IplImage* pImage, int row, int col, int flag, std::queue<std::pa
 		return;
 
 	// pixel is not empty
-	unsigned char val = pImage->imageData[row * pImage->widthStep + col];
-	if(val != 255)
+	if(!pImage->imageData[row * pImage->widthStep + col])
 		return;
 
-	pImage->imageData[row * pImage->widthStep + col] = flag * 30;
+	pImage->imageData[row * pImage->widthStep + col] = 0;
+	m_blobData[row * pImage->width + col] = flag;
 	queue.push(std::make_pair(row, col));
 }
 
-void CImgPrcsTestDlg::DisplayBlob()
+void CImgPrcsTestDlg::LabelBlob()
 {
+	IplImage* tempImage = cvCloneImage(m_pFilterImgBuf);
+
+	delete m_blobData;
+	m_blobData = new unsigned int[tempImage->height * tempImage->width]();
+	
 	int count = 0;
 
-	for(int r=0; r<m_pFilterImgBuf->height; r++)
-		for(int c=0; c<m_pFilterImgBuf->width; c++)
+	for(int r=0; r<tempImage->height; r++)
+		for(int c=0; c<tempImage->width; c++)
 		{
-			unsigned char val = m_pFilterImgBuf->imageData[r * m_pFilterImgBuf->widthStep + c];
-			if(val != 255)
+			if(!tempImage->imageData[r * tempImage->widthStep + c])
 				continue;
 
-			count++;
+			tempImage->imageData[r * tempImage->widthStep + c] = 0;
+			m_blobData[r * tempImage->width + c] = ++count;
 			std::queue<std::pair<int, int>> blobQueue;
 			blobQueue.push(std::make_pair(r, c));
 
@@ -355,16 +334,40 @@ void CImgPrcsTestDlg::DisplayBlob()
 			{
 				int row = blobQueue.front().first;
 				int col = blobQueue.front().second;
-				extendBlob(m_pFilterImgBuf, row-1, col-1, count, blobQueue);
-				extendBlob(m_pFilterImgBuf, row-1, col, count, blobQueue);
-				extendBlob(m_pFilterImgBuf, row-1, col+1, count, blobQueue);
-				extendBlob(m_pFilterImgBuf, row, col-1, count, blobQueue);
-				extendBlob(m_pFilterImgBuf, row, col+1, count, blobQueue);
-				extendBlob(m_pFilterImgBuf, row+1, col-1, count, blobQueue);
-				extendBlob(m_pFilterImgBuf, row+1, col, count, blobQueue);
-				extendBlob(m_pFilterImgBuf, row+1, col+1, count, blobQueue);
+				extendBlob(tempImage, row-1, col-1, count, blobQueue);
+				extendBlob(tempImage, row-1, col, count, blobQueue);
+				extendBlob(tempImage, row-1, col+1, count, blobQueue);
+				extendBlob(tempImage, row, col-1, count, blobQueue);
+				extendBlob(tempImage, row, col+1, count, blobQueue);
+				extendBlob(tempImage, row+1, col-1, count, blobQueue);
+				extendBlob(tempImage, row+1, col, count, blobQueue);
+				extendBlob(tempImage, row+1, col+1, count, blobQueue);
 				blobQueue.pop();
 			}
 		}
-	DisplayImage(m_pFilterImgBuf);
+	DisplayImage(tempImage);
+	cvReleaseImage(&tempImage);
+}
+
+void CImgPrcsTestDlg::OnMouseMove(UINT nFlags, CPoint point)
+{
+	if(!m_blobData)
+		return;
+
+	CRect rect;
+	m_DispCtrl.GetWindowRect(&rect);
+	ScreenToClient(&rect);
+
+	if( point.x < rect.left || point.x >= rect.right ||
+		point.y < rect.top || point.y >= rect.bottom )
+		return;
+
+	CString temp;
+	long x = (point.x - rect.left) * m_pMainImgBuf->width / rect.Width();
+	long y = (point.y - rect.top) * m_pMainImgBuf->height / rect.Height();
+	unsigned int v = m_blobData[y * m_pMainImgBuf->width + x];
+	temp.Format("(%4d, %4d) / blob: %3u", x, y, v);
+	SetDlgItemText(IDC_Static_Cursor, temp);
+
+	CDialog::OnMouseMove(nFlags, point);
 }

@@ -85,19 +85,17 @@ FONT 9, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "Open",IDC_Button_OpenFile,588,13,113,28
     CONTROL         "Origin",IDC_Radio_HSV0,"Button",BS_AUTORADIOBUTTON | WS_GROUP,589,48,34,10
-    CONTROL         "Hue",IDC_Radio_HSV1,"Button",BS_AUTORADIOBUTTON,658,48,29,10
-    CONTROL         "Saturation",IDC_Radio_HSV2,"Button",BS_AUTORADIOBUTTON,589,64,48,10
-    CONTROL         "Value",IDC_Radio_HSV3,"Button",BS_AUTORADIOBUTTON,658,64,33,10
-    CONTROL         "Filter",IDC_Radio_HSV4,"Button",BS_AUTORADIOBUTTON,660,86,31,10
-    EDITTEXT        IDC_Edit_LowerHue,589,78,25,14,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_Edit_UpperHue,621,78,25,14,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_Edit_LowerSat,592,93,25,14,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_Edit_UpperSat,624,93,25,14,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_Edit_LowerVal,597,111,25,14,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_Edit_UpperVal,629,111,25,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Filter",IDC_Radio_HSV1,"Button",BS_AUTORADIOBUTTON,624,48,31,10
+    EDITTEXT        IDC_Edit_LowerHue,593,63,25,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_Edit_UpperHue,629,63,25,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_Edit_LowerSat,599,77,25,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_Edit_UpperSat,631,78,25,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_Edit_LowerVal,599,93,25,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_Edit_UpperVal,633,96,25,14,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "",IDC_STATIC_MAIN_DISP,"Static",SS_BLACKFRAME,7,7,572,429
     DEFPUSHBUTTON   "확인",IDOK,609,447,50,14
     PUSHBUTTON      "취소",IDCANCEL,661,447,50,14
+    LTEXT           "Static",IDC_Static_Cursor,596,414,98,15
 END
 
 
@@ -164,10 +162,6 @@ END
 // String Table
 //
 
-STRINGTABLE 
-BEGIN
-    IDS_ABOUTBOX            "ImgPrcsTest 정보(&A)..."
-END
 
 #endif    // 한국어 resources
 /////////////////////////////////////////////////////////////////////////////

@@ -5,6 +5,7 @@
 #pragma once
 #include "afxwin.h"
 
+#include <queue>
 
 // CImgPrcsTestDlg 대화 상자
 class CImgPrcsTestDlg : public CDialog
@@ -37,10 +38,8 @@ protected:
 private:
 	IplImage* m_pDisplayImgBuf;
 	IplImage* m_pMainImgBuf;
-	IplImage* m_pHueBuf;
-	IplImage* m_pSatBuf;
-	IplImage* m_pValBuf;
 	IplImage* m_pFilterImgBuf;
+	unsigned int* m_blobData;
 
 	CStatic m_DispCtrl;
 	int m_Radio_HSV;
@@ -54,5 +53,8 @@ private:
 	void DisplayImage(IplImage* pImage);//, CDC *pDC, CRect& rect);
 	void FilterImage();
 	void EnableWidget(bool enabled);
-	void DisplayBlob();
+	void extendBlob(IplImage* pImage, int row, int col, int flag, std::queue<std::pair<int, int>>& queue);
+	void LabelBlob();
+public:
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 };
