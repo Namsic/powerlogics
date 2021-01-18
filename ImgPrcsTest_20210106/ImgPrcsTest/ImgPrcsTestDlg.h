@@ -40,6 +40,7 @@ private:
 	IplImage* m_pMainImgBuf;
 	IplImage* m_pFilterImgBuf;
 	unsigned int* m_blobData;
+	unsigned int blobCount;
 
 	CStatic m_DispCtrl;
 	int m_Radio_HSV;
@@ -55,6 +56,7 @@ private:
 	void EnableWidget(bool enabled);
 	void extendBlob(IplImage* pImage, int row, int col, int flag, std::queue<std::pair<int, int>>& queue);
 	void LabelBlob();
+	void CImgPrcsTestDlg::centroid(unsigned int label);
 public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 };

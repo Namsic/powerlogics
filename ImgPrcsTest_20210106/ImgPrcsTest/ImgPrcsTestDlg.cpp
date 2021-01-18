@@ -166,6 +166,7 @@ void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 
 	m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
 	cvCvtColor(m_pMainImgBuf, m_pMainImgBuf, CV_BGR2HSV);
+	FilterImage();
 
 	m_Radio_HSV = 0;
 	UpdateData(0);
@@ -242,7 +243,6 @@ void CImgPrcsTestDlg::FilterImage()
 	if(m_Edit_UpperHue > 180) m_Edit_UpperHue = 180;
 	if(m_Edit_UpperSat > 255) m_Edit_UpperSat = 255;
 	if(m_Edit_UpperVal > 255) m_Edit_UpperVal = 255;
-	m_Radio_HSV = 1;
 	UpdateData(0);
 
 	cvReleaseImage(&m_pFilterImgBuf);
@@ -270,8 +270,11 @@ void CImgPrcsTestDlg::FilterImage()
 		}
 	LabelBlob();
 
-	m_pDisplayImgBuf = m_pFilterImgBuf;
-	DisplayImage(m_pDisplayImgBuf);
+	for(int i=1; i<=blobCount; i++)
+		centroid(i);
+
+	if(m_Radio_HSV == 1)
+		DisplayImage(m_pFilterImgBuf);
 }
 
 void CImgPrcsTestDlg::EnableWidget(bool enable)
@@ -317,7 +320,7 @@ void CImgPrcsTestDlg::LabelBlob()
 	delete m_blobData;
 	m_blobData = new unsigned int[tempImage->height * tempImage->width]();
 	
-	int count = 0;
+	blobCount = 0;
 
 	for(int r=0; r<tempImage->height; r++)
 		for(int c=0; c<tempImage->width; c++)
@@ -326,7 +329,7 @@ void CImgPrcsTestDlg::LabelBlob()
 				continue;
 
 			tempImage->imageData[r * tempImage->widthStep + c] = 0;
-			m_blobData[r * tempImage->width + c] = ++count;
+			m_blobData[r * tempImage->width + c] = ++blobCount;
 			std::queue<std::pair<int, int>> blobQueue;
 			blobQueue.push(std::make_pair(r, c));
 
@@ -334,24 +337,50 @@ void CImgPrcsTestDlg::LabelBlob()
 			{
 				int row = blobQueue.front().first;
 				int col = blobQueue.front().second;
-				extendBlob(tempImage, row-1, col-1, count, blobQueue);
-				extendBlob(tempImage, row-1, col, count, blobQueue);
-				extendBlob(tempImage, row-1, col+1, count, blobQueue);
-				extendBlob(tempImage, row, col-1, count, blobQueue);
-				extendBlob(tempImage, row, col+1, count, blobQueue);
-				extendBlob(tempImage, row+1, col-1, count, blobQueue);
-				extendBlob(tempImage, row+1, col, count, blobQueue);
-				extendBlob(tempImage, row+1, col+1, count, blobQueue);
+				extendBlob(tempImage, row-1, col-1, blobCount, blobQueue);
+				extendBlob(tempImage, row-1, col, blobCount, blobQueue);
+				extendBlob(tempImage, row-1, col+1, blobCount, blobQueue);
+				extendBlob(tempImage, row, col-1, blobCount, blobQueue);
+				extendBlob(tempImage, row, col+1, blobCount, blobQueue);
+				extendBlob(tempImage, row+1, col-1, blobCount, blobQueue);
+				extendBlob(tempImage, row+1, col, blobCount, blobQueue);
+				extendBlob(tempImage, row+1, col+1, blobCount, blobQueue);
 				blobQueue.pop();
 			}
 		}
-	DisplayImage(tempImage);
 	cvReleaseImage(&tempImage);
+}
+
+void CImgPrcsTestDlg::centroid(unsigned int label)
+{
+	long row_avg = 0, col_avg = 0;
+	unsigned int count = 0;
+	for(int r=0; r<m_pFilterImgBuf->height; r++)
+		for(int c=0; c<m_pFilterImgBuf->width; c++)
+			if(m_blobData[r*m_pFilterImgBuf->width+c] == label)
+			{
+				count++;
+				row_avg += r;
+				col_avg += c;
+			}
+	if(!count) return;
+
+	row_avg = row_avg / count;
+	col_avg = col_avg / count;
+
+	cvLine(m_pFilterImgBuf, 
+		cvPoint(col_avg-3, row_avg), 
+		cvPoint(col_avg+3, row_avg), 
+		cvScalar(125));
+	cvLine(m_pFilterImgBuf, 
+		cvPoint(col_avg, row_avg-3), 
+		cvPoint(col_avg, row_avg+3), 
+		cvScalar(125));
 }
 
 void CImgPrcsTestDlg::OnMouseMove(UINT nFlags, CPoint point)
 {
-	if(!m_blobData)
+	if(!m_pMainImgBuf || !m_blobData)
 		return;
 
 	CRect rect;
@@ -365,8 +394,13 @@ void CImgPrcsTestDlg::OnMouseMove(UINT nFlags, CPoint point)
 	CString temp;
 	long x = (point.x - rect.left) * m_pMainImgBuf->width / rect.Width();
 	long y = (point.y - rect.top) * m_pMainImgBuf->height / rect.Height();
-	unsigned int v = m_blobData[y * m_pMainImgBuf->width + x];
-	temp.Format("(%4d, %4d) / blob: %3u", x, y, v);
+	int m_index = y * m_pMainImgBuf->widthStep + x * 3;
+	unsigned char h = m_pMainImgBuf->imageData[m_index];
+	unsigned char s = m_pMainImgBuf->imageData[m_index+1];
+	unsigned char v = m_pMainImgBuf->imageData[m_index+2];
+	unsigned int b = m_blobData[y * m_pMainImgBuf->width + x];
+	temp.Format("(%ld, %ld)\nH: %3u\nS: %3u\nV: %3u\nBlob: %3u", x, y, h, s, v, b);
+
 	SetDlgItemText(IDC_Static_Cursor, temp);
 
 	CDialog::OnMouseMove(nFlags, point);

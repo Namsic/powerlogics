@@ -95,7 +95,7 @@ BEGIN
     CONTROL         "",IDC_STATIC_MAIN_DISP,"Static",SS_BLACKFRAME,7,7,572,429
     DEFPUSHBUTTON   "확인",IDOK,609,447,50,14
     PUSHBUTTON      "취소",IDCANCEL,661,447,50,14
-    LTEXT           "Static",IDC_Static_Cursor,596,414,98,15
+    CTEXT           "Static",IDC_Static_Cursor,587,388,98,46
 END
 
 
@@ -155,13 +155,6 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
 
 #endif    // 한국어 resources
 /////////////////////////////////////////////////////////////////////////////
