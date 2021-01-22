@@ -51,7 +51,7 @@
 #include "opencv2\imgcodecs\imgcodecs_c.h"
 
 #include <opencv2\opencv.hpp>
-using namespace cv; 
+using namespace cv;
 
 #ifdef _DEBUG
 	#pragma comment(lib, "opencv_core310d.lib")
@@ -66,7 +66,12 @@ using namespace cv;
 #endif
 
 
-
+// zxing
+#define NAN 0
+long double fmaxl(long double a,long double b );
+double fmax(double a,double b );
+double fminl(double a,double b );
+int isnan(double nan);
 
 
 

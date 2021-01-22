@@ -7,6 +7,15 @@
 
 #include <queue>
 
+#include "zxing/DecodeHints.h"
+#include "zxing/BinaryBitmap.h"
+#include "zxing/common/GreyscaleLuminanceSource.h"
+#include "zxing/common/GlobalHistogramBinarizer.h"
+#include "zxing/common/DetectorResult.h"
+#include "zxing/common/DecoderResult.h"
+#include "zxing/qrcode/decoder/Decoder.h"
+#include "zxing/qrcode/detector/Detector.h"
+
 // CImgPrcsTestDlg 대화 상자
 class CImgPrcsTestDlg : public CDialog
 {
@@ -40,23 +49,20 @@ private:
 	IplImage* m_pMainImgBuf;
 	IplImage* m_pFilterImgBuf;
 	unsigned int* m_blobData;
-	unsigned int blobCount;
 
 	CStatic m_DispCtrl;
 	int m_Radio_HSV;
-	int m_Edit_LowerHue;
-	int m_Edit_UpperHue;
-	int m_Edit_LowerSat;
-	int m_Edit_UpperSat;
-	int m_Edit_LowerVal;
-	int m_Edit_UpperVal;
+	int m_Edit_DivideHor;
+	int m_Edit_DivideVer;
+	int m_Edit_ErrorRange;
 
 	void DisplayImage(IplImage* pImage);//, CDC *pDC, CRect& rect);
-	void FilterImage();
 	void EnableWidget(bool enabled);
 	void extendBlob(IplImage* pImage, int row, int col, int flag, std::queue<std::pair<int, int>>& queue);
 	void LabelBlob();
-	void CImgPrcsTestDlg::centroid(unsigned int label);
+	void myAdaptiveTreshold();
+	void AdtTreshold();
+	void DetectQR();
 public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 };

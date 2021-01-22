@@ -19,12 +19,9 @@
 CImgPrcsTestDlg::CImgPrcsTestDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CImgPrcsTestDlg::IDD, pParent)
 	, m_Radio_HSV(0)
-	, m_Edit_LowerHue(0)
-	, m_Edit_UpperHue(180)
-	, m_Edit_LowerSat(0)
-	, m_Edit_UpperSat(255)
-	, m_Edit_LowerVal(0)
-	, m_Edit_UpperVal(255)
+	, m_Edit_DivideHor(1)
+	, m_Edit_DivideVer(1)
+	, m_Edit_ErrorRange(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -34,12 +31,9 @@ void CImgPrcsTestDlg::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_STATIC_MAIN_DISP, m_DispCtrl);
 	DDX_Radio(pDX, IDC_Radio_HSV0, m_Radio_HSV);
-	DDX_Text(pDX, IDC_Edit_LowerHue, m_Edit_LowerHue);
-	DDX_Text(pDX, IDC_Edit_UpperHue, m_Edit_UpperHue);
-	DDX_Text(pDX, IDC_Edit_LowerSat, m_Edit_LowerSat);
-	DDX_Text(pDX, IDC_Edit_UpperSat, m_Edit_UpperSat);
-	DDX_Text(pDX, IDC_Edit_LowerVal, m_Edit_LowerVal);
-	DDX_Text(pDX, IDC_Edit_UpperVal, m_Edit_UpperVal);
+	DDX_Text(pDX, IDC_Edit_DivideHorizontal, m_Edit_DivideHor);
+	DDX_Text(pDX, IDC_Edit_DivideVertical, m_Edit_DivideVer);
+	DDX_Text(pDX, IDC_Edit_ErrorRange, m_Edit_ErrorRange);
 }
 
 BEGIN_MESSAGE_MAP(CImgPrcsTestDlg, CDialog)
@@ -50,12 +44,9 @@ BEGIN_MESSAGE_MAP(CImgPrcsTestDlg, CDialog)
 	ON_BN_CLICKED(IDC_Button_OpenFile, &CImgPrcsTestDlg::OnBnClickedButtonOpenfile)
 	ON_BN_CLICKED(IDC_Radio_HSV0, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
 	ON_BN_CLICKED(IDC_Radio_HSV1, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
-	ON_EN_CHANGE(IDC_Edit_LowerHue, &CImgPrcsTestDlg::FilterImage)
-	ON_EN_CHANGE(IDC_Edit_UpperHue, &CImgPrcsTestDlg::FilterImage)
-	ON_EN_CHANGE(IDC_Edit_LowerSat, &CImgPrcsTestDlg::FilterImage)
-	ON_EN_CHANGE(IDC_Edit_UpperSat, &CImgPrcsTestDlg::FilterImage)
-	ON_EN_CHANGE(IDC_Edit_LowerVal, &CImgPrcsTestDlg::FilterImage)
-	ON_EN_CHANGE(IDC_Edit_UpperVal, &CImgPrcsTestDlg::FilterImage)
+	ON_EN_CHANGE(IDC_Edit_DivideHorizontal, &CImgPrcsTestDlg::myAdaptiveTreshold)
+	ON_EN_CHANGE(IDC_Edit_DivideVertical, &CImgPrcsTestDlg::myAdaptiveTreshold)
+	ON_EN_CHANGE(IDC_Edit_ErrorRange, &CImgPrcsTestDlg::myAdaptiveTreshold)
 	ON_WM_MOUSEMOVE()
 END_MESSAGE_MAP()
 
@@ -101,8 +92,15 @@ BOOL CImgPrcsTestDlg::PreTranslateMessage(MSG* pMsg)
 		case 0x32:  // '2'
 			break;
 		case 0x41:  // 'a'
+			myAdaptiveTreshold();
+			break;
+		case 0x42:  // 'b'
+			AdtTreshold();
+			break;
+		case 0x43:  // 'c'
 			break;
 		case 0x53:  // 's'
+			DetectQR();
 			break;
 		}
 	}
@@ -160,13 +158,11 @@ void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 		return;
 
 	cvReleaseImage(&m_pMainImgBuf);
-	cvReleaseImage(&m_pFilterImgBuf);
 	delete m_blobData;
 	m_blobData = NULL;
 
 	m_pMainImgBuf = cvLoadImage(dlg.GetPathName());
 	cvCvtColor(m_pMainImgBuf, m_pMainImgBuf, CV_BGR2HSV);
-	FilterImage();
 
 	m_Radio_HSV = 0;
 	UpdateData(0);
@@ -234,67 +230,17 @@ void CImgPrcsTestDlg::DisplayImage(IplImage* pImage)//, CDC *pDC, CRect& rect)
 	cvReleaseImage(&tempImage);
 }
 
-void CImgPrcsTestDlg::FilterImage()
-{
-	UpdateData(1);
-	if(m_Edit_LowerHue > 180) m_Edit_LowerHue = 0;
-	if(m_Edit_LowerSat > 255) m_Edit_LowerSat = 0;
-	if(m_Edit_LowerVal > 255) m_Edit_LowerVal = 0;
-	if(m_Edit_UpperHue > 180) m_Edit_UpperHue = 180;
-	if(m_Edit_UpperSat > 255) m_Edit_UpperSat = 255;
-	if(m_Edit_UpperVal > 255) m_Edit_UpperVal = 255;
-	UpdateData(0);
-
-	cvReleaseImage(&m_pFilterImgBuf);
-	m_pFilterImgBuf = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
-
-	for(int r=0; r<m_pFilterImgBuf->height; r++)
-		for(int c=0; c<m_pFilterImgBuf->width; c++)
-		{
-			int m_index = r * m_pMainImgBuf->widthStep + c * 3;
-			int f_index = r * m_pFilterImgBuf->widthStep + c;
-
-			unsigned char hue = m_pMainImgBuf->imageData[m_index];
-			unsigned char sat = m_pMainImgBuf->imageData[m_index+1];
-			unsigned char val = m_pMainImgBuf->imageData[m_index+2];
-			if( hue < m_Edit_LowerHue || hue > m_Edit_UpperHue ||
-				sat < m_Edit_LowerSat || sat > m_Edit_UpperSat || 
-				val < m_Edit_LowerVal || val > m_Edit_UpperVal )
-			{
-				m_pFilterImgBuf->imageData[f_index] = 0;
-			}
-			else
-			{
-				m_pFilterImgBuf->imageData[f_index] = -1;
-			}
-		}
-	LabelBlob();
-
-	for(int i=1; i<=blobCount; i++)
-		centroid(i);
-
-	if(m_Radio_HSV == 1)
-		DisplayImage(m_pFilterImgBuf);
-}
-
 void CImgPrcsTestDlg::EnableWidget(bool enable)
 {
 	GetDlgItem(IDC_Radio_HSV0)->EnableWindow(enable);
 	GetDlgItem(IDC_Radio_HSV1)->EnableWindow(enable);
 
-	m_Edit_LowerHue = 0;
-	m_Edit_LowerSat = 0;
-	m_Edit_LowerVal = 0;
-	m_Edit_UpperHue = 180;
-	m_Edit_UpperSat = 255;
-	m_Edit_UpperVal = 255;
+	m_Edit_DivideHor = 1;
+	m_Edit_DivideVer = 1;
 
-	GetDlgItem(IDC_Edit_LowerHue)->EnableWindow(enable);
-	GetDlgItem(IDC_Edit_UpperHue)->EnableWindow(enable);
-	GetDlgItem(IDC_Edit_LowerSat)->EnableWindow(enable);
-	GetDlgItem(IDC_Edit_UpperSat)->EnableWindow(enable);
-	GetDlgItem(IDC_Edit_LowerVal)->EnableWindow(enable);
-	GetDlgItem(IDC_Edit_UpperVal)->EnableWindow(enable);
+	GetDlgItem(IDC_Edit_DivideHorizontal)->EnableWindow(enable);
+	GetDlgItem(IDC_Edit_DivideVertical)->EnableWindow(enable);
+	GetDlgItem(IDC_Edit_ErrorRange)->EnableWindow(enable);
 }
 
 void CImgPrcsTestDlg::extendBlob(IplImage* pImage, int row, int col, int flag, std::queue<std::pair<int, int>>& queue)
@@ -320,7 +266,7 @@ void CImgPrcsTestDlg::LabelBlob()
 	delete m_blobData;
 	m_blobData = new unsigned int[tempImage->height * tempImage->width]();
 	
-	blobCount = 0;
+	int blobCount = 0;
 
 	for(int r=0; r<tempImage->height; r++)
 		for(int c=0; c<tempImage->width; c++)
@@ -351,31 +297,92 @@ void CImgPrcsTestDlg::LabelBlob()
 	cvReleaseImage(&tempImage);
 }
 
-void CImgPrcsTestDlg::centroid(unsigned int label)
+void CImgPrcsTestDlg::myAdaptiveTreshold()
 {
-	long row_avg = 0, col_avg = 0;
-	unsigned int count = 0;
-	for(int r=0; r<m_pFilterImgBuf->height; r++)
-		for(int c=0; c<m_pFilterImgBuf->width; c++)
-			if(m_blobData[r*m_pFilterImgBuf->width+c] == label)
-			{
-				count++;
-				row_avg += r;
-				col_avg += c;
-			}
-	if(!count) return;
+	UpdateData();
+	int w = m_Edit_DivideHor;
+	int h = m_Edit_DivideVer;
+	int err = m_Edit_ErrorRange;
 
-	row_avg = row_avg / count;
-	col_avg = col_avg / count;
+	cvReleaseImage(&m_pFilterImgBuf);
+	m_pFilterImgBuf = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
+	int subW = m_pMainImgBuf->width / w;
+	int subH = m_pMainImgBuf->height / h;
+	unsigned int sumVal;
+	unsigned char avg;
 
-	cvLine(m_pFilterImgBuf, 
-		cvPoint(col_avg-3, row_avg), 
-		cvPoint(col_avg+3, row_avg), 
-		cvScalar(125));
-	cvLine(m_pFilterImgBuf, 
-		cvPoint(col_avg, row_avg-3), 
-		cvPoint(col_avg, row_avg+3), 
-		cvScalar(125));
+	for(int i=0; i<h; i++)
+		for(int j=0; j<w; j++)
+		{
+			sumVal = 0;
+
+			for(int r=0; r<subH; r++)
+				for(int c=0; c<subW; c++)
+					sumVal += (unsigned char)m_pMainImgBuf->imageData[(i*subH+r)*m_pMainImgBuf->widthStep + (j*subW+c)*3 + 2];
+			avg = sumVal / (subH * subW);
+
+			for(int r=0; r<subH; r++)
+				for(int c=0; c<subW; c++)
+				{
+					unsigned char val = m_pMainImgBuf->imageData[(i*subH+r)*m_pMainImgBuf->widthStep + (j*subW+c)*3 + 2];
+					m_pFilterImgBuf->imageData[(i*subH+r)*m_pFilterImgBuf->widthStep + (j*subW+c)] = val < avg-err ? 0 : -1;
+				}
+		}
+	//cvErode(m_pFilterImgBuf, m_pFilterImgBuf, 0, 1);
+	//cvDilate(m_pFilterImgBuf, m_pFilterImgBuf, 0, 1);
+
+	DisplayImage(m_pFilterImgBuf);
+}
+
+void CImgPrcsTestDlg::AdtTreshold()
+{
+	cvReleaseImage(&m_pFilterImgBuf);
+	m_pFilterImgBuf = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
+	IplImage* tmpHue = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
+	IplImage* tmpSat = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
+	cvSplit(m_pMainImgBuf, tmpHue, tmpSat, m_pFilterImgBuf, NULL);
+	cvReleaseImage(&tmpHue);
+	cvReleaseImage(&tmpSat);
+
+	cvAdaptiveThreshold(m_pFilterImgBuf, m_pFilterImgBuf, 255, 
+		ADAPTIVE_THRESH_GAUSSIAN_C);
+	DisplayImage(m_pFilterImgBuf);
+}
+
+void CImgPrcsTestDlg::DetectQR()
+{
+	BYTE *imgData = new BYTE[m_pFilterImgBuf->imageSize];
+	memcpy(imgData, m_pFilterImgBuf->imageData, m_pFilterImgBuf->imageSize);
+	
+	
+	using namespace zxing;
+	Ref<LuminanceSource> tLs;
+	GreyscaleLuminanceSource *GLS = new GreyscaleLuminanceSource(imgData, m_pFilterImgBuf->widthStep, m_pFilterImgBuf->height, 0, 0, m_pFilterImgBuf->widthStep, m_pFilterImgBuf->height);
+	tLs = GLS;
+	Ref<Binarizer> Br;
+	GlobalHistogramBinarizer *GHB = new GlobalHistogramBinarizer (tLs);
+	Br = GHB;
+	BinaryBitmap* BB = new BinaryBitmap(Br);
+	
+	DecodeHints dHints;
+	dHints.addFormat(BarcodeFormat_QR_CODE);
+
+	using namespace qrcode;
+	try
+	{
+		Ref<DetectorResult> detectorResult = Detector(BB->getBlackMatrix()).detect(dHints);
+		Ref<DecoderResult> DecodeResult = Decoder().decode(detectorResult->getBits());
+		AfxMessageBox(CString(DecodeResult->getText()->getText().c_str()));
+	}catch(zxing::Exception e){
+		CString strTemp;
+		strTemp.Format(_T("Exception: %s"), e.what());
+		AfxMessageBox(strTemp);
+	}
+
+	delete[] imgData;
+	//delete GLS;
+	//delete GHB;
+	//delete BB;
 }
 
 void CImgPrcsTestDlg::OnMouseMove(UINT nFlags, CPoint point)
