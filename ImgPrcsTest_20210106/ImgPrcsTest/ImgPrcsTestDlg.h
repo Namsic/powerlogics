@@ -6,6 +6,7 @@
 #include "afxwin.h"
 
 #include <queue>
+#include <vector>
 
 #include "zxing/DecodeHints.h"
 #include "zxing/BinaryBitmap.h"
@@ -60,7 +61,7 @@ private:
 	void EnableWidget(bool enabled);
 	void extendBlob(IplImage* pImage, int row, int col, int flag, std::queue<std::pair<int, int>>& queue);
 	void LabelBlob();
-	void myAdaptiveTreshold();
+	void myAdaptiveThreshold();
 	void AdtTreshold();
 	void DetectQR();
 public:

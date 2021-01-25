@@ -44,9 +44,9 @@ BEGIN_MESSAGE_MAP(CImgPrcsTestDlg, CDialog)
 	ON_BN_CLICKED(IDC_Button_OpenFile, &CImgPrcsTestDlg::OnBnClickedButtonOpenfile)
 	ON_BN_CLICKED(IDC_Radio_HSV0, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
 	ON_BN_CLICKED(IDC_Radio_HSV1, &CImgPrcsTestDlg::OnBnClickedRadioHsv)
-	ON_EN_CHANGE(IDC_Edit_DivideHorizontal, &CImgPrcsTestDlg::myAdaptiveTreshold)
-	ON_EN_CHANGE(IDC_Edit_DivideVertical, &CImgPrcsTestDlg::myAdaptiveTreshold)
-	ON_EN_CHANGE(IDC_Edit_ErrorRange, &CImgPrcsTestDlg::myAdaptiveTreshold)
+	ON_EN_CHANGE(IDC_Edit_DivideHorizontal, &CImgPrcsTestDlg::myAdaptiveThreshold)
+	ON_EN_CHANGE(IDC_Edit_DivideVertical, &CImgPrcsTestDlg::myAdaptiveThreshold)
+	ON_EN_CHANGE(IDC_Edit_ErrorRange, &CImgPrcsTestDlg::myAdaptiveThreshold)
 	ON_WM_MOUSEMOVE()
 END_MESSAGE_MAP()
 
@@ -92,7 +92,6 @@ BOOL CImgPrcsTestDlg::PreTranslateMessage(MSG* pMsg)
 		case 0x32:  // '2'
 			break;
 		case 0x41:  // 'a'
-			myAdaptiveTreshold();
 			break;
 		case 0x42:  // 'b'
 			AdtTreshold();
@@ -100,7 +99,6 @@ BOOL CImgPrcsTestDlg::PreTranslateMessage(MSG* pMsg)
 		case 0x43:  // 'c'
 			break;
 		case 0x53:  // 's'
-			DetectQR();
 			break;
 		}
 	}
@@ -167,6 +165,7 @@ void CImgPrcsTestDlg::OnBnClickedButtonOpenfile()
 	m_Radio_HSV = 0;
 	UpdateData(0);
 	m_pDisplayImgBuf = m_pMainImgBuf;
+	myAdaptiveThreshold();
 	DisplayImage(m_pDisplayImgBuf);
 	EnableWidget(1);
 }
@@ -297,7 +296,7 @@ void CImgPrcsTestDlg::LabelBlob()
 	cvReleaseImage(&tempImage);
 }
 
-void CImgPrcsTestDlg::myAdaptiveTreshold()
+void CImgPrcsTestDlg::myAdaptiveThreshold()
 {
 	UpdateData();
 	int w = m_Edit_DivideHor;
@@ -331,7 +330,8 @@ void CImgPrcsTestDlg::myAdaptiveTreshold()
 	//cvErode(m_pFilterImgBuf, m_pFilterImgBuf, 0, 1);
 	//cvDilate(m_pFilterImgBuf, m_pFilterImgBuf, 0, 1);
 
-	DisplayImage(m_pFilterImgBuf);
+	DetectQR();
+	//DisplayImage(m_pFilterImgBuf);
 }
 
 void CImgPrcsTestDlg::AdtTreshold()
@@ -371,8 +371,11 @@ void CImgPrcsTestDlg::DetectQR()
 	try
 	{
 		Ref<DetectorResult> detectorResult = Detector(BB->getBlackMatrix()).detect(dHints);
+		std::vector<Ref<ResultPoint>> points(detectorResult->getPoints());
+		for(int i=0; i<points.size(); i++)
+			cvCircle(m_pFilterImgBuf, cvPoint(points[i]->getX(), points[i]->getY()), 10, cvScalar(200), 2);
 		Ref<DecoderResult> DecodeResult = Decoder().decode(detectorResult->getBits());
-		AfxMessageBox(CString(DecodeResult->getText()->getText().c_str()));
+		GetDlgItem(IDC_Static_Cursor)->SetWindowTextA(CString(DecodeResult->getText()->getText().c_str()));
 	}catch(zxing::Exception e){
 		CString strTemp;
 		strTemp.Format(_T("Exception: %s"), e.what());
@@ -380,9 +383,6 @@ void CImgPrcsTestDlg::DetectQR()
 	}
 
 	delete[] imgData;
-	//delete GLS;
-	//delete GHB;
-	//delete BB;
 }
 
 void CImgPrcsTestDlg::OnMouseMove(UINT nFlags, CPoint point)
