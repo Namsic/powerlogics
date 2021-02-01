@@ -92,6 +92,7 @@ BOOL CImgPrcsTestDlg::PreTranslateMessage(MSG* pMsg)
 		case 0x32:  // '2'
 			break;
 		case 0x41:  // 'a'
+			DetectQR();
 			break;
 		case 0x42:  // 'b'
 			AdtTreshold();
@@ -307,7 +308,7 @@ void CImgPrcsTestDlg::myAdaptiveThreshold()
 	m_pFilterImgBuf = cvCreateImage(cvGetSize(m_pMainImgBuf), IPL_DEPTH_8U, 1);
 	int subW = m_pMainImgBuf->width / w;
 	int subH = m_pMainImgBuf->height / h;
-	unsigned int sumVal;
+	unsigned long sumVal;
 	unsigned char avg;
 
 	for(int i=0; i<h; i++)
@@ -327,11 +328,12 @@ void CImgPrcsTestDlg::myAdaptiveThreshold()
 					m_pFilterImgBuf->imageData[(i*subH+r)*m_pFilterImgBuf->widthStep + (j*subW+c)] = val < avg-err ? 0 : -1;
 				}
 		}
-	//cvErode(m_pFilterImgBuf, m_pFilterImgBuf, 0, 1);
-	//cvDilate(m_pFilterImgBuf, m_pFilterImgBuf, 0, 1);
+	cvErode(m_pFilterImgBuf, m_pFilterImgBuf, 0, 2);
+	cvDilate(m_pFilterImgBuf, m_pFilterImgBuf, 0, 2);
 
-	DetectQR();
-	//DisplayImage(m_pFilterImgBuf);
+	//DetectQR();
+	if(m_Radio_HSV == 1)
+		DisplayImage(m_pFilterImgBuf);
 }
 
 void CImgPrcsTestDlg::AdtTreshold()
@@ -345,7 +347,8 @@ void CImgPrcsTestDlg::AdtTreshold()
 	cvReleaseImage(&tmpSat);
 
 	cvAdaptiveThreshold(m_pFilterImgBuf, m_pFilterImgBuf, 255, 
-		ADAPTIVE_THRESH_GAUSSIAN_C);
+		ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 77);
+	//cvThreshold(m_pFilterImgBuf, m_pFilterImgBuf
 	DisplayImage(m_pFilterImgBuf);
 }
 
@@ -370,7 +373,8 @@ void CImgPrcsTestDlg::DetectQR()
 	using namespace qrcode;
 	try
 	{
-		Ref<DetectorResult> detectorResult = Detector(BB->getBlackMatrix()).detect(dHints);
+		Ref<BitMatrix> tmp = BB->getBlackMatrix();
+		Ref<DetectorResult> detectorResult = Detector(tmp).detect(dHints);
 		std::vector<Ref<ResultPoint>> points(detectorResult->getPoints());
 		for(int i=0; i<points.size(); i++)
 			cvCircle(m_pFilterImgBuf, cvPoint(points[i]->getX(), points[i]->getY()), 10, cvScalar(200), 2);
@@ -378,8 +382,8 @@ void CImgPrcsTestDlg::DetectQR()
 		GetDlgItem(IDC_Static_Cursor)->SetWindowTextA(CString(DecodeResult->getText()->getText().c_str()));
 	}catch(zxing::Exception e){
 		CString strTemp;
-		strTemp.Format(_T("Exception: %s"), e.what());
-		AfxMessageBox(strTemp);
+		strTemp.Format(_T("Exception:\n%s"), e.what());
+		GetDlgItem(IDC_Static_Cursor)->SetWindowTextA(strTemp);
 	}
 
 	delete[] imgData;
